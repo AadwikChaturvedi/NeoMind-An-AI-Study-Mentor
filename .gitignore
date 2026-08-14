@@ -179,3 +179,12 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Personal and confidential files
+.env
+__pycache__/
+*.pyc
+venv/
+.venv/
+backend/neomind.db
+.DS_Store

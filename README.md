@@ -85,31 +85,52 @@ Generate summaries of study performance, including:
 
 ## 📁 Project Architecture
 
-```text
-NeoMind/
-│
-├── frontend/
-│   ├── pages/
-│   ├── assets/
-│   ├── css/
-│   └── js/
-│
+```
+NeoMind-AI/
 ├── backend/
-│   ├── main.py
-│   ├── routes/
-│   ├── models/
-│   ├── services/
-│   └── database/
-│
-├── ai/
-│   ├── mentor/
-│   └── monitoring/
-│
-├── database/
-│   └── neomind.db
-│
-├── .env.example
-├── requirements.txt
+│   ├── app/
+│   │   ├── main.py            # FastAPI entry point
+│   │   ├── config.py          # Env config loader
+│   │   ├── database.py        # DB engine/session setup
+│   │   ├── models/            # SQLAlchemy tables
+│   │   │   ├── user.py
+│   │   │   ├── study_session.py
+│   │   │   └── report.py
+│   │   ├── schemas/           # Pydantic request/response models
+│   │   │   ├── user.py
+│   │   │   ├── study_session.py
+│   │   │   └── report.py
+│   │   ├── routes/            # One router per feature
+│   │   │   ├── dashboard.py
+│   │   │   ├── timer.py
+│   │   │   ├── mentor.py
+│   │   │   ├── analytics.py
+│   │   │   └── reports.py
+│   │   ├── services/          # Business logic / external calls
+│   │   │   ├── gemini_service.py
+│   │   │   └── analytics_service.py
+│   │   └── utils/
+│   │       └── helpers.py
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── templates/              # Jinja2 pages
+│   │   ├── base.html
+│   │   ├── dashboard.html
+│   │   ├── timer.html
+│   │   ├── mentor.html
+│   │   ├── analytics.html
+│   │   └── reports.html
+│   └── static/
+│       ├── css/style.css
+│       ├── js/
+│       │   ├── dashboard.js
+│       │   ├── timer.js
+│       │   ├── mentor.js
+│       │   ├── analytics.js
+│       │   └── reports.js
+│       └── images/
+├── .gitignore
 └── README.md
 ```
 
