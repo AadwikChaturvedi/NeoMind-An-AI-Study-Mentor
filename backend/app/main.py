@@ -1,4 +1,3 @@
-# App entry point: creates FastAPI app, mounts static/templates, includes routers
 """
 main.py
 --------
@@ -12,8 +11,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import health
+from app.database import init_db
 
 app = FastAPI(title="NeoMind AI")
+
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 # --- CORS ---
 # Allows the frontend (running on a different origin/port during dev)
