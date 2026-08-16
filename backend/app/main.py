@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.routes import health, timer
+from app.routes import health, timer, sessions
 from app.database import init_db
 
 app = FastAPI(title="NeoMind AI")
@@ -42,6 +42,7 @@ app.add_middleware(
 #   app.include_router(dashboard.router)
 app.include_router(health.router)
 app.include_router(timer.router)
+app.include_router(sessions.router)
 
 # --- Frontend: static files + templates ---
 # Paths are built from this file's own location (not the current working
