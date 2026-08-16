@@ -1,11 +1,16 @@
-// timer.js — client-side stopwatch with explicit Start/Pause/Resume/Stop
-// controls. On Stop, session data is POSTed to the backend API.
+// timer.js — Study Timer logic + backend connection.
+//
+// On Stop, session data is POSTed to POST /sessions (the general
+// sessions API — see backend/app/routes/sessions.py). That endpoint
+// expects integers, so duration is rounded to whole minutes before
+// sending.
 
-const TIMER_API_URL = "/api/timer/session";
+const SESSIONS_API_URL = "/sessions";
 
 let seconds = 0;
 let intervalId = null;
 let distractions = 0;
+let lastFailedPayload = null; // kept around so "Retry save" can resend it
 
 const display = document.getElementById("timer-display");
 const sessionDurationEl = document.getElementById("session-duration");
@@ -20,6 +25,7 @@ const distractionCountEl = document.getElementById("distraction-count");
 const focusEstimateEl = document.getElementById("focus-estimate");
 const logDistractionBtn = document.getElementById("log-distraction");
 const saveStatus = document.getElementById("save-status");
+const retrySaveBtn = document.getElementById("retry-save-btn");
 
 function formatClock(s) {
   const h = String(Math.floor(s / 3600)).padStart(2, "0");
@@ -54,13 +60,42 @@ function showButtons({ start = false, pause = false, resume = false, stop = fals
   stopBtn.classList.toggle("hidden", !stop);
 }
 
+// Sends session data to the backend. Returns { ok, message } instead of
+// throwing, so callers (stop() and the retry button) can just show
+// whatever message comes back without duplicating try/catch logic.
+async function saveSession(payload) {
+  try {
+    const res = await fetch(SESSIONS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      return { ok: true, message: "Saved to your study log." };
+    }
+
+    // Server responded, but rejected the request (bad data, server error, etc.)
+    if (res.status >= 400 && res.status < 500) {
+      return { ok: false, message: "The server rejected this session's data. It wasn't saved." };
+    }
+    return { ok: false, message: "The server had a problem saving this session. Try again shortly." };
+  } catch (err) {
+    // fetch() itself threw — almost always a network/connectivity issue
+    console.error("Failed to reach the server:", err);
+    return { ok: false, message: "Couldn't reach the server. Check your connection and try again." };
+  }
+}
+
 function start() {
   seconds = 0;
   distractions = 0;
+  lastFailedPayload = null;
   distractionCountEl.textContent = "0";
   focusEstimateEl.textContent = "—";
   updateDisplays();
   saveStatus.classList.add("hidden");
+  retrySaveBtn.classList.add("hidden");
 
   intervalId = setInterval(tick, 1000);
   status.textContent = "Session in progress";
@@ -93,32 +128,27 @@ async function stop() {
   livePill?.classList.remove("flex");
   logDistractionBtn.disabled = true;
 
-  const finalDurationMinutes = Math.round((seconds / 60) * 100) / 100;
-  const finalFocusScore = estimateFocusScore() ?? 0;
+  const payload = {
+    duration: Math.round(seconds / 60), // whole minutes — /sessions expects an int
+    distractions: distractions,
+    focus_score: estimateFocusScore() ?? 0,
+  };
 
   status.textContent = "Saving session…";
   saveStatus.classList.remove("hidden");
   saveStatus.textContent = "Saving to your study log…";
+  retrySaveBtn.classList.add("hidden");
 
-  try {
-    const res = await fetch(TIMER_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        duration: finalDurationMinutes,
-        distractions: distractions,
-        focus_score: finalFocusScore,
-      }),
-    });
+  const result = await saveSession(payload);
+  saveStatus.textContent = result.message;
 
-    if (!res.ok) throw new Error(`Server responded ${res.status}`);
-
+  if (result.ok) {
     status.textContent = "Session saved — nice work.";
-    saveStatus.textContent = "Saved to your study log.";
-  } catch (err) {
-    status.textContent = "Session ended — couldn't save it.";
-    saveStatus.textContent = "Couldn't reach the server, session wasn't saved.";
-    console.error("Failed to save session:", err);
+    lastFailedPayload = null;
+  } else {
+    status.textContent = "Session ended";
+    lastFailedPayload = payload;
+    retrySaveBtn.classList.remove("hidden");
   }
 
   seconds = 0;
@@ -128,10 +158,26 @@ async function stop() {
   focusEstimateEl.textContent = "—";
 }
 
+async function retrySave() {
+  if (!lastFailedPayload) return;
+  retrySaveBtn.classList.add("hidden");
+  saveStatus.textContent = "Retrying…";
+
+  const result = await saveSession(lastFailedPayload);
+  saveStatus.textContent = result.message;
+
+  if (result.ok) {
+    lastFailedPayload = null;
+  } else {
+    retrySaveBtn.classList.remove("hidden");
+  }
+}
+
 startBtn.addEventListener("click", start);
 pauseBtn.addEventListener("click", pause);
 resumeBtn.addEventListener("click", resume);
 stopBtn.addEventListener("click", stop);
+retrySaveBtn.addEventListener("click", retrySave);
 logDistractionBtn.addEventListener("click", () => {
   distractions++;
   distractionCountEl.textContent = distractions;
