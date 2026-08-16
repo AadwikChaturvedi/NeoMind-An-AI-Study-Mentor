@@ -1,18 +1,21 @@
-// dashboard.js — mock data only, no backend calls yet.
+// dashboard.js — mock data + Chart.js charts, no backend calls yet.
 
 const stats = [
-  { label: "Focus time today", value: "3h 42m", trend: "+18% vs yesterday", accent: "violet" },
-  { label: "Avg focus score", value: "82", trend: "+4 pts this week", accent: "cyan" },
-  { label: "Current streak", value: "6 days", trend: "Personal best: 11", accent: "amber" },
-  { label: "Sessions this week", value: "14", trend: "3 subjects covered", accent: "coral" },
+  { label: "Total study hours", value: "126.5h", trend: "+12.4h this month", accent: "violet" },
+  { label: "Focus score", value: "82", trend: "+4 pts this week", accent: "cyan" },
+  { label: "Study sessions", value: "48", trend: "12 this week", accent: "amber" },
+  { label: "Productivity index", value: "8.4", trend: "out of 10", accent: "coral" },
 ];
 
-const recentSessions = [
-  { subject: "Organic Chemistry", duration: "52m", focusScore: 88, distractions: 2, when: "2h ago" },
-  { subject: "Linear Algebra", duration: "38m", focusScore: 74, distractions: 5, when: "5h ago" },
-  { subject: "World History", duration: "61m", focusScore: 91, distractions: 1, when: "Yesterday" },
-  { subject: "Spanish Vocabulary", duration: "24m", focusScore: 69, distractions: 6, when: "Yesterday" },
-];
+const weeklyHours = {
+  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  data: [2.5, 3.2, 1.8, 4.0, 3.5, 5.2, 2.1],
+};
+
+const focusTrend = {
+  labels: ["S-6", "S-5", "S-4", "S-3", "S-2", "S-1", "Latest"],
+  data: [74, 81, 69, 88, 91, 77, 85],
+};
 
 function greet() {
   const hour = new Date().getHours();
@@ -32,19 +35,72 @@ function renderStats() {
   `).join("");
 }
 
-function renderSessions() {
-  const el = document.getElementById("recent-sessions");
-  el.innerHTML = recentSessions.map(s => `
-    <div class="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-      <div>
-        <p class="text-sm font-medium">${s.subject}</p>
-        <p class="text-xs text-ink2">${s.duration} · ${s.distractions} distractions · ${s.when}</p>
-      </div>
-      <span class="font-mono text-sm ${s.focusScore >= 80 ? 'text-cyan' : s.focusScore >= 70 ? 'text-amber' : 'text-coral'}">${s.focusScore}</span>
-    </div>
-  `).join("");
+function renderWeeklyHoursChart() {
+  const ctx = document.getElementById("weekly-hours-chart");
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: weeklyHours.labels,
+      datasets: [{
+        label: "Hours studied",
+        data: weeklyHours.data,
+        backgroundColor: "#7C6CFF",
+        borderRadius: 6,
+        maxBarThickness: 36,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: "#1B2140", borderColor: "#262C4A", borderWidth: 1, padding: 10 },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: "#8B90AC" } },
+        y: { beginAtZero: true, grid: { color: "#1B2140" }, ticks: { color: "#8B90AC" } },
+      },
+    },
+  });
 }
+
+function renderFocusTrendChart() {
+  const ctx = document.getElementById("focus-trend-chart");
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: focusTrend.labels,
+      datasets: [{
+        label: "Focus score",
+        data: focusTrend.data,
+        borderColor: "#4CC9F0",
+        backgroundColor: "rgba(76,201,240,0.15)",
+        tension: 0.35,
+        fill: true,
+        pointBackgroundColor: "#0B0E1A",
+        pointBorderColor: "#4CC9F0",
+        pointBorderWidth: 2,
+        pointRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: "#1B2140", borderColor: "#262C4A", borderWidth: 1, padding: 10 },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: "#8B90AC" } },
+        y: { min: 50, max: 100, grid: { color: "#1B2140" }, ticks: { color: "#8B90AC" } },
+      },
+    },
+  });
+}
+
+Chart.defaults.font.family = "Inter, sans-serif";
 
 greet();
 renderStats();
-renderSessions();
+renderWeeklyHoursChart();
+renderFocusTrendChart();

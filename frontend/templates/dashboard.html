@@ -8,11 +8,15 @@
   <div class="relative z-10 max-w-xl">
     <p class="text-xs uppercase tracking-widest text-cyan mb-3">Focus session</p>
     <h2 class="font-display text-3xl lg:text-4xl leading-tight mb-4" id="greeting-text">Good evening, Aadwik.</h2>
-    <p class="text-ink2 mb-8">You've studied <span class="font-mono text-[#EDEEF7]">3h 42m</span> today — your focus score is trending up. Keep the streak alive.</p>
+    <p class="text-ink2 mb-8">You've studied <span class="font-mono text-[#EDEEF7]">3h 42m</span> today — your focus
+      score is trending up. Keep the streak alive.</p>
     <div class="flex flex-wrap items-center gap-4">
-      <a href="/timer" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet to-cyan px-5 py-3 text-sm font-semibold text-ink hover:opacity-90 transition">
+      <a href="/timer"
+        class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet to-cyan px-5 py-3 text-sm font-semibold text-ink hover:opacity-90 transition">
         Start a session
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
       </a>
       <div class="flex items-center gap-2 text-sm text-ink2">
         <span class="waveform"><span></span><span></span><span></span><span></span><span></span></span>
@@ -24,26 +28,26 @@
 
 <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8" id="stat-cards"></section>
 
-<section class="grid lg:grid-cols-3 gap-6 mt-8">
-  <div class="lg:col-span-2 rounded-2xl border border-hairline bg-surface p-6">
+<section class="grid lg:grid-cols-2 gap-6 mt-8">
+  <div class="rounded-2xl border border-hairline bg-surface p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-display text-lg">Recent sessions</h3>
-      <a href="/analytics" class="text-xs text-violet hover:underline">View analytics</a>
+      <h3 class="font-display text-lg">Weekly study hours</h3>
+      <span class="text-xs text-ink2">This week</span>
     </div>
-    <div id="recent-sessions" class="divide-y divide-hairline"></div>
+    <canvas id="weekly-hours-chart" height="220"></canvas>
   </div>
 
-  <div class="rounded-2xl border border-hairline bg-elevated p-6 flex flex-col">
-    <p class="text-xs uppercase tracking-widest text-amber mb-3">Mentor tip</p>
-    <p class="font-display text-lg leading-snug mb-4">"Short breaks between sessions protect focus more than pushing through fatigue."</p>
-    <a href="/mentor" class="mt-auto inline-flex items-center gap-2 text-sm text-violet hover:underline">
-      Ask your mentor
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-    </a>
+  <div class="rounded-2xl border border-hairline bg-surface p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display text-lg">Focus trend</h3>
+      <span class="text-xs text-ink2">Last 7 sessions</span>
+    </div>
+    <canvas id="focus-trend-chart" height="220"></canvas>
   </div>
 </section>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/static/js/dashboard.js"></script>
 {% endblock %}
