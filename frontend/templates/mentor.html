@@ -1,1 +1,26 @@
-{# AI Mentor chat page #}
+{% extends "base.html" %}
+{% block title %}AI Mentor · NeoMind AI{% endblock %}
+{% block eyebrow %}Study coaching{% endblock %}
+{% block page_title %}AI Mentor{% endblock %}
+
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6 h-[calc(100vh-11rem)]">
+  <div class="lg:col-span-2 rounded-3xl border border-hairline bg-surface flex flex-col overflow-hidden">
+    <div id="chat-window" class="flex-1 overflow-y-auto px-6 py-6 space-y-4"></div>
+    <div class="border-t border-hairline p-4 flex gap-2">
+      <input id="chat-input" type="text" placeholder="Ask about focus, motivation, or study strategy…"
+        class="flex-1 rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm" />
+      <button id="send-btn" class="rounded-xl bg-gradient-to-r from-violet to-cyan px-5 py-3 text-sm font-semibold text-ink hover:opacity-90 transition">Send</button>
+    </div>
+  </div>
+
+  <div class="rounded-3xl border border-hairline bg-elevated p-6 overflow-y-auto">
+    <h3 class="font-display text-lg mb-4">Try asking</h3>
+    <div id="suggested-prompts" class="flex flex-col gap-2"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/mentor.js"></script>
+{% endblock %}

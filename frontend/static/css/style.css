@@ -1,1 +1,120 @@
-/* Custom styles beyond Tailwind utilities */
+/* style.css
+   -----------
+   Custom styles that go beyond Tailwind utilities: the waveform
+   signature animation, nav link states, hero gradient mesh, and
+   accessibility basics (focus rings, reduced motion). */
+
+/* --- Focus waveform (signature element) --- */
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+}
+
+.waveform span {
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to top, #7C6CFF, #4CC9F0);
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+.waveform span:nth-child(1) {
+  height: 40%;
+  animation-delay: 0s;
+}
+
+.waveform span:nth-child(2) {
+  height: 70%;
+  animation-delay: 0.15s;
+}
+
+.waveform span:nth-child(3) {
+  height: 100%;
+  animation-delay: 0.3s;
+}
+
+.waveform span:nth-child(4) {
+  height: 60%;
+  animation-delay: 0.45s;
+}
+
+.waveform span:nth-child(5) {
+  height: 85%;
+  animation-delay: 0.6s;
+}
+
+@keyframes wave {
+
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* --- Sidebar nav links --- */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: #8B90AC;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.nav-link:hover {
+  background: #1B2140;
+  color: #EDEEF7;
+}
+
+.nav-link svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.nav-link-active {
+  background: linear-gradient(90deg, rgba(124, 108, 255, 0.15), rgba(76, 201, 240, 0.05));
+  color: #EDEEF7;
+  box-shadow: inset 3px 0 0 #7C6CFF;
+}
+
+/* --- Hero gradient mesh --- */
+.hero-mesh {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(124, 108, 255, 0.35), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(76, 201, 240, 0.25), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(245, 166, 35, 0.12), transparent 50%),
+    #0B0E1A;
+}
+
+/* --- Scrollbars --- */
+#chat-window::-webkit-scrollbar {
+  width: 6px;
+}
+
+#chat-window::-webkit-scrollbar-thumb {
+  background-color: #262C4A;
+  border-radius: 9999px;
+}
+
+/* --- Accessibility --- */
+:focus-visible {
+  outline: 2px solid #7C6CFF;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .waveform span,
+  .animate-pulse {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

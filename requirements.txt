@@ -1,8 +1,8 @@
-fastapi
 uvicorn[standard]
 sqlalchemy
 pydantic[email]
 python-dotenv
-jinja2
 python-multipart
 google-generativeai
+fastapi==0.141.1
+jinja2==3.1.6

@@ -1,1 +1,33 @@
-{# Analytics page #}
+{% extends "base.html" %}
+{% block title %}Analytics · NeoMind AI{% endblock %}
+{% block eyebrow %}Insights{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="grid lg:grid-cols-2 gap-6">
+  <div class="rounded-3xl border border-hairline bg-surface p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-display text-lg">Time by subject</h3>
+      <span class="text-xs text-ink2">This week</span>
+    </div>
+    <div id="subject-chart"></div>
+  </div>
+
+  <div class="rounded-3xl border border-hairline bg-surface p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-display text-lg">Focus score trend</h3>
+      <span class="text-xs text-ink2">Last 7 sessions</span>
+    </div>
+    <div id="focus-trend"></div>
+  </div>
+</div>
+
+<div class="rounded-3xl border border-hairline bg-elevated p-6 mt-6">
+  <h3 class="font-display text-lg mb-4">Distraction breakdown</h3>
+  <div id="distraction-list" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analytics.js"></script>
+{% endblock %}

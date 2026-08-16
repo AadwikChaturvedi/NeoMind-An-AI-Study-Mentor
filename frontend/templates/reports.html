@@ -1,1 +1,17 @@
-{# Reports page #}
+{% extends "base.html" %}
+{% block title %}Reports · NeoMind AI{% endblock %}
+{% block eyebrow %}Summaries{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <p class="text-sm text-ink2">Auto-generated weekly summaries of your study activity.</p>
+  <button class="rounded-xl border border-hairline px-4 py-2.5 text-sm hover:bg-elevated transition">Generate new report</button>
+</div>
+
+<div id="reports-list" class="grid gap-4"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/reports.js"></script>
+{% endblock %}

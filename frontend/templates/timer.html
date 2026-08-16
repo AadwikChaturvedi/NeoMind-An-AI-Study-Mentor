@@ -1,1 +1,46 @@
-{# Study Timer page #}
+{% extends "base.html" %}
+{% block title %}Study Timer · NeoMind AI{% endblock %}
+{% block eyebrow %}Deep work{% endblock %}
+{% block page_title %}Study Timer{% endblock %}
+
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 rounded-3xl border border-hairline bg-surface p-8 lg:p-12 flex flex-col items-center text-center">
+    <p class="text-xs uppercase tracking-widest text-ink2 mb-2" id="timer-status">Ready when you are</p>
+    <p class="font-mono text-6xl lg:text-7xl tracking-tight mb-6" id="timer-display">00:00:00</p>
+
+    <div class="w-full max-w-sm mb-6">
+      <label class="text-xs text-ink2 block mb-2 text-left" for="subject-select">Subject</label>
+      <select id="subject-select" class="w-full rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm">
+        <option>Organic Chemistry</option>
+        <option>Linear Algebra</option>
+        <option>World History</option>
+        <option>Spanish Vocabulary</option>
+        <option>Custom subject…</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="start-btn" class="rounded-xl bg-gradient-to-r from-violet to-cyan px-6 py-3 text-sm font-semibold text-ink hover:opacity-90 transition">Start session</button>
+      <button id="pause-btn" class="rounded-xl border border-hairline px-6 py-3 text-sm font-semibold hover:bg-elevated transition hidden">Pause</button>
+      <button id="stop-btn" class="rounded-xl border border-hairline px-6 py-3 text-sm font-semibold text-coral hover:bg-elevated transition hidden">End session</button>
+    </div>
+
+    <div id="live-waveform" class="waveform mt-8 hidden"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="rounded-3xl border border-hairline bg-elevated p-6 flex flex-col">
+    <h3 class="font-display text-lg mb-4">This session</h3>
+    <dl class="space-y-4 text-sm">
+      <div class="flex justify-between"><dt class="text-ink2">Distractions logged</dt><dd class="font-mono" id="distraction-count">0</dd></div>
+      <div class="flex justify-between"><dt class="text-ink2">Estimated focus score</dt><dd class="font-mono" id="focus-estimate">—</dd></div>
+    </dl>
+    <button id="log-distraction" class="mt-6 w-full rounded-xl border border-hairline py-2.5 text-sm hover:bg-surface transition" disabled>I got distracted</button>
+    <p class="text-xs text-ink2 mt-4">Logging distractions helps NeoMind AI estimate your focus score for this session — mock calculation for now.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/timer.js"></script>
+{% endblock %}
