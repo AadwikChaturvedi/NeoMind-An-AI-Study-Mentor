@@ -7,22 +7,41 @@ Run with (from inside backend/):
     uvicorn app.main:app --reload
 """
 
+from contextlib import asynccontextmanager
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# --- Environment variables ---
+# .env lives at the project root (one level up from backend/), not
+# inside backend/ itself — so it's loaded from an explicit path built
+# from this file's own location, not the current working directory.
+# This must happen before importing routes: app/services/gemini_service.py
+# reads GEMINI_MODEL at import time, so the .env values need to already
+# be in os.environ by then.
+APP_DIR = Path(__file__).resolve().parent
+BACKEND_DIR = APP_DIR.parent
+PROJECT_ROOT = BACKEND_DIR.parent
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.routes import health, timer, sessions
+from app.routes import health, timer, sessions, mentor
 from app.database import init_db
 
-app = FastAPI(title="NeoMind AI")
 
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     init_db()
+    yield
+
+
+app = FastAPI(title="NeoMind AI", lifespan=lifespan)
 
 # --- CORS ---
 # Allows the frontend (running on a different origin/port during dev)
@@ -43,14 +62,12 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(timer.router)
 app.include_router(sessions.router)
+app.include_router(mentor.router)
 
 # --- Frontend: static files + templates ---
-# Paths are built from this file's own location (not the current working
-# directory), so this works whether you run uvicorn from backend/ or from
-# the project root with --app-dir backend.
-BACKEND_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = BACKEND_DIR.parent / "frontend"
-
+# FRONTEND_DIR was already computed above, from this file's own location
+# (not the current working directory) — works whether you run uvicorn
+# from backend/ or from the project root with --app-dir backend.
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(FRONTEND_DIR / "templates"))
 
