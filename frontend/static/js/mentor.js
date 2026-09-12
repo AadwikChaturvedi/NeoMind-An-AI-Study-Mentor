@@ -1,13 +1,14 @@
-// mentor.js — AI Mentor chat UI.
+// mentor.js — AI Mentor chat UI, connected to POST /mentor/chat.
 //
-// All replies are dummy/canned responses matched by keyword — nothing
-// here calls Gemini or any backend yet. Swap replyTo() for a real API
-// call when that's ready; the rest of the UI logic won't need to change.
+// Sends the user's message to the backend, which calls Gemini
+// server-side (see backend/app/services/gemini_service.py) and
+// returns { reply: "..." }. A typing indicator shows while waiting,
+// and any failure is rendered as a message instead of failing silently.
+
+const MENTOR_API_URL = "/mentor/chat";
 
 const chatHistory = [
   { sender: "mentor", text: "Hey Aadwik. I saw your focus score dipped during Linear Algebra yesterday — want to talk through what happened?" },
-  { sender: "user", text: "Yeah, I kept checking my phone during the session." },
-  { sender: "mentor", text: "That's really common in the first 10 minutes of a session. Try putting your phone in another room next time, and start with the topic you find easiest — it builds momentum before the harder material." },
 ];
 
 const suggestedPrompts = [
@@ -16,15 +17,6 @@ const suggestedPrompts = [
   "I keep procrastinating on hard topics",
   "How long should my breaks be?",
 ];
-
-const dummyReplies = [
-  { keywords: ["procrastin"], reply: "Try the 2-minute rule: commit to just 2 minutes on the task. Starting is usually the hardest part — momentum takes over after that." },
-  { keywords: ["break", "rest"], reply: "For most students, a 5-minute break every 25–30 minutes keeps focus scores highest. Longer sessions need longer breaks — try 15 minutes after 90 minutes of work." },
-  { keywords: ["focus", "distract"], reply: "Focus naturally dips in waves. If you notice it dropping, that's a good cue for a short break rather than pushing through." },
-  { keywords: ["plan", "schedule"], reply: "Start tomorrow with your hardest subject while your energy is highest, then save lighter review work for later in the day." },
-];
-
-const FALLBACK_REPLY = "That's a good question to sit with. Based on your recent sessions, staying consistent with short, focused blocks tends to help more than long unstructured ones.";
 
 const chatWindow = document.getElementById("chat-window");
 const chatInput = document.getElementById("chat-input");
@@ -54,6 +46,7 @@ function addMessage(sender, text) {
   renderMessage({ sender, text });
 }
 
+// --- Loading animation while waiting for Gemini ---
 function showTypingIndicator() {
   const wrap = document.createElement("div");
   wrap.id = "typing-indicator";
@@ -71,19 +64,32 @@ function removeTypingIndicator() {
   document.getElementById("typing-indicator")?.remove();
 }
 
-function pickDummyReply(userText) {
-  const lower = userText.toLowerCase();
-  const match = dummyReplies.find(r => r.keywords.some(k => lower.includes(k)));
-  return match ? match.reply : FALLBACK_REPLY;
-}
-
-function replyTo(userText) {
+// --- Send the message, get Gemini's response back ---
+async function replyTo(userText) {
   showTypingIndicator();
-  const delay = 500 + Math.random() * 400;
-  setTimeout(() => {
+
+  try {
+    const res = await fetch(MENTOR_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userText }),
+    });
+
     removeTypingIndicator();
-    addMessage("mentor", pickDummyReply(userText));
-  }, delay);
+
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => ({}));
+      addMessage("mentor", errorBody.detail || "The mentor couldn't respond right now. Try again in a moment.");
+      return;
+    }
+
+    const data = await res.json();
+    addMessage("mentor", data.reply);
+  } catch (err) {
+    removeTypingIndicator();
+    console.error("Failed to reach the mentor:", err);
+    addMessage("mentor", "Couldn't reach the mentor right now. Check your connection and try again.");
+  }
 }
 
 function send(text) {

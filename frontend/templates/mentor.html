@@ -5,7 +5,6 @@
 
 {% block content %}
 <div class="grid lg:grid-cols-3 gap-6 h-[calc(100vh-11rem)]">
-  <!-- Chat UI -->
   <div class="lg:col-span-2 rounded-3xl border border-hairline bg-surface flex flex-col overflow-hidden">
     <div class="px-6 py-4 border-b border-hairline flex items-center gap-3">
       <div class="h-9 w-9 rounded-full bg-gradient-to-br from-violet to-cyan flex items-center justify-center">
@@ -17,14 +16,12 @@
       </div>
       <div>
         <p class="text-sm font-medium">NeoMind Mentor</p>
-        <p class="text-xs text-ink2">Dummy responses for now — Gemini isn't connected yet</p>
+        <p class="text-xs text-ink2">Powered by Gemini</p>
       </div>
     </div>
 
-    <!-- Chat history: seeded messages + everything sent this session -->
     <div id="chat-window" class="flex-1 overflow-y-auto px-6 py-6 space-y-4"></div>
 
-    <!-- Input box + Send button -->
     <div class="border-t border-hairline p-4 flex gap-2">
       <input id="chat-input" type="text" placeholder="Ask about focus, motivation, or study strategy…"
         class="flex-1 rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm" autocomplete="off" />
