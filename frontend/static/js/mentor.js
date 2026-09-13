@@ -30,13 +30,38 @@ function scrollToBottom() {
 function renderMessage({ sender, text }) {
   const wrap = document.createElement("div");
   wrap.className = sender === "user" ? "flex justify-end" : "flex justify-start";
-  wrap.innerHTML = `
-    <div class="max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-      sender === "user"
-        ? "bg-gradient-to-r from-violet to-cyan text-ink"
-        : "bg-elevated border border-hairline text-[#EDEEF7]"
-    }">${text}</div>
-  `;
+
+  const bubble = document.createElement("div");
+  bubble.className =
+    sender === "user"
+      ? "max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-gradient-to-r from-violet to-cyan text-ink"
+      : "max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-elevated border border-hairline text-[#EDEEF7] markdown-body";
+
+  if (sender === "mentor") {
+    // Gemini's replies come back as Markdown (and sometimes LaTeX math),
+    // e.g. "**bold**", "### heading", "$$x^2$$" — parse it into real HTML
+    // instead of showing the raw characters. DOMPurify strips anything
+    // dangerous before it touches the page.
+    const html = marked.parse(text);
+    bubble.innerHTML = DOMPurify.sanitize(html);
+
+    if (window.renderMathInElement) {
+      renderMathInElement(bubble, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false },
+        ],
+        throwOnError: false,
+      });
+    }
+  } else {
+    // User input is never parsed as Markdown/HTML — always plain text.
+    bubble.textContent = text;
+  }
+
+  wrap.appendChild(bubble);
   chatWindow.appendChild(wrap);
   scrollToBottom();
 }

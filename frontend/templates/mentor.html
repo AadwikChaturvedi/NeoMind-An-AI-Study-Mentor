@@ -3,6 +3,10 @@
 {% block eyebrow %}Study coaching{% endblock %}
 {% block page_title %}AI Mentor{% endblock %}
 
+{% block head_extra %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="grid lg:grid-cols-3 gap-6 h-[calc(100vh-11rem)]">
   <div class="lg:col-span-2 rounded-3xl border border-hairline bg-surface flex flex-col overflow-hidden">
@@ -38,5 +42,9 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script src="/static/js/mentor.js"></script>
 {% endblock %}
