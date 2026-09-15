@@ -4,30 +4,48 @@
 {% block page_title %}Analytics{% endblock %}
 
 {% block content %}
-<div class="grid lg:grid-cols-2 gap-6">
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="distraction-stats"></section>
+
+<section class="grid lg:grid-cols-2 gap-6 mt-6">
   <div class="rounded-3xl border border-hairline bg-surface p-6">
     <div class="flex items-center justify-between mb-6">
-      <h3 class="font-display text-lg">Time by subject</h3>
-      <span class="text-xs text-ink2">This week</span>
+      <h3 class="font-display text-lg">Daily study hours</h3>
+      <span class="text-xs text-ink2">Last 7 days</span>
     </div>
-    <div id="subject-chart"></div>
+    <canvas id="study-hours-chart" height="220"></canvas>
   </div>
 
   <div class="rounded-3xl border border-hairline bg-surface p-6">
     <div class="flex items-center justify-between mb-6">
-      <h3 class="font-display text-lg">Focus score trend</h3>
-      <span class="text-xs text-ink2">Last 7 sessions</span>
+      <h3 class="font-display text-lg">Weekly focus trend</h3>
+      <span class="text-xs text-ink2">Last 7 days</span>
     </div>
-    <div id="focus-trend"></div>
+    <canvas id="focus-trend-chart" height="220"></canvas>
   </div>
-</div>
 
-<div class="rounded-3xl border border-hairline bg-elevated p-6 mt-6">
-  <h3 class="font-display text-lg mb-4">Distraction breakdown</h3>
-  <div id="distraction-list" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-</div>
+  <div class="rounded-3xl border border-hairline bg-surface p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-display text-lg">Productivity score trend</h3>
+      <span class="text-xs text-ink2">Focus adjusted for distractions</span>
+    </div>
+    <canvas id="productivity-trend-chart" height="220"></canvas>
+  </div>
+
+  <div class="rounded-3xl border border-hairline bg-surface p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-display text-lg">Distractions per day</h3>
+      <span class="text-xs text-ink2">Last 7 days</span>
+    </div>
+    <canvas id="distractions-chart" height="220"></canvas>
+  </div>
+</section>
+
+<p id="analytics-empty-note" class="text-sm text-ink2 mt-6 hidden">
+  No study sessions logged yet — these charts will fill in once you complete a session on the Study Timer page.
+</p>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/static/js/analytics.js"></script>
 {% endblock %}
