@@ -1,53 +1,59 @@
-// reports.js — mock saved reports, no backend calls.
+// reports.js — fetches the real report summary from GET /reports/summary
+// and renders it. The PDF download itself is just a plain link
+// (/reports/pdf) in reports.html — no JS needed for that part, the
+// browser handles the download via the Content-Disposition header.
 
-const reports = [
-  {
-    title: "Week of Aug 4 – Aug 10",
-    summary: "18h 40m studied across 4 subjects. Focus score averaged 82, up 6 points from the previous week.",
-    focusScore: 82,
-    minutes: 1120,
-    date: "Aug 10, 2026",
-  },
-  {
-    title: "Week of Jul 28 – Aug 3",
-    summary: "14h 05m studied. Organic Chemistry sessions had the most distractions — mostly phone notifications.",
-    focusScore: 76,
-    minutes: 845,
-    date: "Aug 3, 2026",
-  },
-  {
-    title: "Week of Jul 21 – Jul 27",
-    summary: "9h 50m studied, a lighter week. Mentor suggested shorter, more frequent sessions going forward.",
-    focusScore: 71,
-    minutes: 590,
-    date: "Jul 27, 2026",
-  },
-];
+const REPORT_API_URL = "/reports/summary";
 
-function renderReports() {
-  const el = document.getElementById("reports-list");
-  el.innerHTML = reports.map(r => `
-    <div class="rounded-2xl border border-hairline bg-surface p-6 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8">
-      <div class="flex-1">
-        <div class="flex items-center gap-3 mb-2">
-          <h3 class="font-display text-lg">${r.title}</h3>
-          <span class="text-xs text-ink2">${r.date}</span>
-        </div>
-        <p class="text-sm text-ink2 leading-relaxed">${r.summary}</p>
-      </div>
-      <div class="flex gap-6 lg:gap-8">
-        <div>
-          <p class="font-mono text-xl text-cyan">${Math.floor(r.minutes / 60)}h ${r.minutes % 60}m</p>
-          <p class="text-xs text-ink2 mt-1">Studied</p>
-        </div>
-        <div>
-          <p class="font-mono text-xl text-violet">${r.focusScore}</p>
-          <p class="text-xs text-ink2 mt-1">Focus score</p>
-        </div>
-      </div>
-      <button class="rounded-xl border border-hairline px-4 py-2.5 text-sm hover:bg-elevated transition whitespace-nowrap">View report</button>
+function renderStatCards(summary) {
+  const cards = [
+    { label: "Total study hours", value: `${summary.total_study_hours}h`, accent: "violet" },
+    { label: "Average focus score", value: summary.average_focus_score, accent: "cyan" },
+    { label: "Distractions this week", value: summary.distractions_this_week, accent: "coral" },
+    { label: "Sessions logged", value: summary.sessions_logged, accent: "amber" },
+  ];
+  document.getElementById("report-stats").innerHTML = cards.map(c => `
+    <div class="rounded-2xl border border-hairline bg-surface p-5">
+      <p class="text-xs text-ink2 mb-2">${c.label}</p>
+      <p class="font-mono text-2xl text-${c.accent}">${c.value}</p>
     </div>
   `).join("");
 }
 
-renderReports();
+function renderProductivitySummary(summary) {
+  const el = document.getElementById("productivity-summary");
+  if (summary.sessions_logged === 0) {
+    el.textContent = "No sessions yet — this will fill in once you've logged some study time.";
+    return;
+  }
+  el.textContent =
+    `Your average productivity score is ${summary.average_productivity_score}/100, based on ` +
+    `${summary.sessions_logged} logged session${summary.sessions_logged === 1 ? "" : "s"}. ` +
+    `This score factors your focus score in with logged distractions — it isn't a raw measurement, ` +
+    `just a useful way to see focus and distractions together at a glance.`;
+}
+
+async function loadReport() {
+  try {
+    const res = await fetch(REPORT_API_URL);
+    if (!res.ok) throw new Error(`Server responded ${res.status}`);
+    const summary = await res.json();
+
+    renderStatCards(summary);
+    renderProductivitySummary(summary);
+
+    if (summary.sessions_logged === 0) {
+      document.getElementById("reports-empty-note").classList.remove("hidden");
+    }
+  } catch (err) {
+    console.error("Failed to load report:", err);
+    document.querySelector("main").insertAdjacentHTML(
+      "afterbegin",
+      `<div class="rounded-2xl border border-coral/40 bg-coral/10 text-coral text-sm px-4 py-3 mb-6">
+        Couldn't load the report. Check that the backend is running and try refreshing.
+      </div>`
+    );
+  }
+}
+
+loadReport();

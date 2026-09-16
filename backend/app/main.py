@@ -31,7 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.routes import health, timer, sessions, mentor, analytics
+from app.routes import health, timer, sessions, mentor, analytics, reports
 from app.database import init_db
 
 
@@ -64,6 +64,7 @@ app.include_router(timer.router)
 app.include_router(sessions.router)
 app.include_router(mentor.router)
 app.include_router(analytics.router)
+app.include_router(reports.router)
 
 # --- Frontend: static files + templates ---
 # FRONTEND_DIR was already computed above, from this file's own location

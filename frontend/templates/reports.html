@@ -4,12 +4,30 @@
 {% block page_title %}Reports{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between mb-6">
-  <p class="text-sm text-ink2">Auto-generated weekly summaries of your study activity.</p>
-  <button class="rounded-xl border border-hairline px-4 py-2.5 text-sm hover:bg-elevated transition">Generate new report</button>
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <p class="text-sm text-ink2">A snapshot of your study activity, built from your real session data.</p>
+  <a href="/reports/pdf"
+    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet to-cyan px-4 py-2.5 text-sm font-semibold text-ink hover:opacity-90 transition">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M12 15V3" />
+    </svg>
+    Download report as PDF
+  </a>
 </div>
 
-<div id="reports-list" class="grid gap-4"></div>
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="report-stats"></section>
+
+<div class="rounded-3xl border border-hairline bg-elevated p-6 mt-6">
+  <h3 class="font-display text-lg mb-2">Productivity summary</h3>
+  <p id="productivity-summary" class="text-sm text-ink2 leading-relaxed"></p>
+</div>
+
+<p id="reports-empty-note" class="text-sm text-ink2 mt-6 hidden">
+  No study sessions logged yet — this report will fill in once you complete a session on the Study Timer page.
+</p>
 {% endblock %}
 
 {% block scripts %}
