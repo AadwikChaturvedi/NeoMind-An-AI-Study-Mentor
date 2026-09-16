@@ -10,7 +10,7 @@ compute_productivity_score from analytics_service.py so that formula
 lives in exactly one place across the whole app.
 """
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
 
 from fpdf import FPDF
@@ -18,6 +18,25 @@ from fpdf.enums import XPos, YPos
 
 from app.models.study_session import StudySession
 from app.services.analytics_service import compute_productivity_score
+
+
+def compute_current_streak(sessions: List[StudySession]) -> int:
+    """Consecutive days (ending today) with at least one session.
+
+    If today has no session yet, counts from yesterday instead — so the
+    streak doesn't look "broken" before today is even over."""
+    if not sessions:
+        return 0
+
+    study_dates = {s.created_at.date() for s in sessions if s.created_at}
+    today = date.today()
+    day = today if today in study_dates else today - timedelta(days=1)
+
+    streak = 0
+    while day in study_dates:
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
 
 
 def compute_report_summary(sessions: List[StudySession]) -> dict:
@@ -28,6 +47,7 @@ def compute_report_summary(sessions: List[StudySession]) -> dict:
             "distractions_this_week": 0,
             "average_productivity_score": 0.0,
             "sessions_logged": 0,
+            "current_streak_days": 0,
         }
 
     total_minutes = sum(s.duration for s in sessions)
@@ -48,6 +68,7 @@ def compute_report_summary(sessions: List[StudySession]) -> dict:
         "distractions_this_week": distractions_this_week,
         "average_productivity_score": round(avg_productivity, 1),
         "sessions_logged": len(sessions),
+        "current_streak_days": compute_current_streak(sessions),
     }
 
 
@@ -77,6 +98,7 @@ def generate_report_pdf(summary: dict) -> bytes:
         ("Distractions this week", str(summary["distractions_this_week"])),
         ("Average productivity score", f"{summary['average_productivity_score']} / 100"),
         ("Sessions logged", str(summary["sessions_logged"])),
+        ("Current streak", f"{summary['current_streak_days']} days"),
     ]
 
     for label, value in rows:

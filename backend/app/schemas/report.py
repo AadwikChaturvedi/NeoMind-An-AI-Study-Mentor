@@ -15,3 +15,4 @@ class ReportSummary(BaseModel):
     distractions_this_week: int
     average_productivity_score: float
     sessions_logged: int
+    current_streak_days: int

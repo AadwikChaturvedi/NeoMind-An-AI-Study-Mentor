@@ -1,1 +1,0 @@
-# Shared helper functions

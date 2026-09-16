@@ -1,21 +1,8 @@
-// dashboard.js — mock data + Chart.js charts, no backend calls yet.
-
-const stats = [
-  { label: "Total study hours", value: "126.5h", trend: "+12.4h this month", accent: "violet" },
-  { label: "Focus score", value: "82", trend: "+4 pts this week", accent: "cyan" },
-  { label: "Study sessions", value: "48", trend: "12 this week", accent: "amber" },
-  { label: "Productivity index", value: "8.4", trend: "out of 10", accent: "coral" },
-];
-
-const weeklyHours = {
-  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  data: [2.5, 3.2, 1.8, 4.0, 3.5, 5.2, 2.1],
-};
-
-const focusTrend = {
-  labels: ["S-6", "S-5", "S-4", "S-3", "S-2", "S-1", "Latest"],
-  data: [74, 81, 69, 88, 91, 77, 85],
-};
+// dashboard.js — real data only, fetched from the backend.
+// Reuses two endpoints that already exist rather than adding a new one:
+//   /reports/summary   -> all-time totals for the 4 stat cards + streak
+//   /analytics/summary -> today's hours specifically (last day in its
+//                          7-day daily_study_hours series is always today)
 
 function greet() {
   const hour = new Date().getHours();
@@ -24,83 +11,101 @@ function greet() {
   if (el) el.textContent = `Good ${part}, Aadwik.`;
 }
 
-function renderStats() {
-  const el = document.getElementById("stat-cards");
-  el.innerHTML = stats.map(s => `
+function renderStatCards(report) {
+  const cards = [
+    { label: "Total study hours", value: `${report.total_study_hours}h`, sub: "All-time", accent: "violet" },
+    { label: "Focus score", value: report.average_focus_score, sub: "Average across all sessions", accent: "cyan" },
+    { label: "Study sessions", value: report.sessions_logged, sub: "All-time", accent: "amber" },
+    { label: "Productivity index", value: report.average_productivity_score, sub: "Out of 100", accent: "coral" },
+  ];
+  document.getElementById("stat-cards").innerHTML = cards.map(c => `
     <div class="rounded-2xl border border-hairline bg-surface p-5">
-      <p class="text-xs text-ink2 mb-2">${s.label}</p>
-      <p class="font-mono text-2xl">${s.value}</p>
-      <p class="text-xs text-${s.accent} mt-2">${s.trend}</p>
+      <p class="text-xs text-ink2 mb-2">${c.label}</p>
+      <p class="font-mono text-2xl">${c.value}</p>
+      <p class="text-xs text-${c.accent} mt-2">${c.sub}</p>
     </div>
   `).join("");
 }
 
-function renderWeeklyHoursChart() {
-  const ctx = document.getElementById("weekly-hours-chart");
-  if (!ctx) return;
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: weeklyHours.labels,
-      datasets: [{
-        label: "Hours studied",
-        data: weeklyHours.data,
-        backgroundColor: "#7C6CFF",
-        borderRadius: 6,
-        maxBarThickness: 36,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: { backgroundColor: "#1B2140", borderColor: "#262C4A", borderWidth: 1, padding: 10 },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: "#8B90AC" } },
-        y: { beginAtZero: true, grid: { color: "#1B2140" }, ticks: { color: "#8B90AC" } },
-      },
-    },
-  });
+function renderHero(report, todayHours) {
+  const heroSubtext = document.getElementById("hero-subtext");
+  const hours = Math.floor(todayHours);
+  const minutes = Math.round((todayHours - hours) * 60);
+  const todayLabel = todayHours > 0 ? `${hours}h ${minutes}m` : "0m";
+
+  heroSubtext.innerHTML =
+    `You've studied <span class="font-mono text-[#EDEEF7]">${todayLabel}</span> today. ` +
+    `Your average focus score is <span class="font-mono text-[#EDEEF7]">${report.average_focus_score}</span> ` +
+    `across ${report.sessions_logged} session${report.sessions_logged === 1 ? "" : "s"}.`;
+
+  const streakEl = document.getElementById("hero-streak");
+  const streakText = report.current_streak_days > 0
+    ? `${report.current_streak_days}-day streak`
+    : "Start your streak today";
+  streakEl.innerHTML =
+    `<span class="waveform"><span></span><span></span><span></span><span></span><span></span></span>${streakText}`;
 }
 
-function renderFocusTrendChart() {
-  const ctx = document.getElementById("focus-trend-chart");
-  if (!ctx) return;
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: focusTrend.labels,
-      datasets: [{
-        label: "Focus score",
-        data: focusTrend.data,
-        borderColor: "#4CC9F0",
-        backgroundColor: "rgba(76,201,240,0.15)",
-        tension: 0.35,
-        fill: true,
-        pointBackgroundColor: "#0B0E1A",
-        pointBorderColor: "#4CC9F0",
-        pointBorderWidth: 2,
-        pointRadius: 4,
-      }],
+function renderHighlights() {
+  const highlights = [
+    {
+      title: "AI Mentor",
+      desc: "Real Gemini-powered coaching that reads your actual session data — not canned tips.",
+      icon: `<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>`,
+      accent: "violet",
     },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: { backgroundColor: "#1B2140", borderColor: "#262C4A", borderWidth: 1, padding: 10 },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: "#8B90AC" } },
-        y: { min: 50, max: 100, grid: { color: "#1B2140" }, ticks: { color: "#8B90AC" } },
-      },
+    {
+      title: "Study Timer",
+      desc: "A focus timer that logs every session automatically the moment you stop it.",
+      icon: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
+      accent: "cyan",
     },
-  });
+    {
+      title: "Real Analytics",
+      desc: "Every chart in this app is built from your actual sessions — nothing here is a placeholder.",
+      icon: `<path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/>`,
+      accent: "amber",
+    },
+    {
+      title: "PDF Reports",
+      desc: "Download a clean, printable summary of your progress in one click, anytime.",
+      icon: `<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>`,
+      accent: "coral",
+    },
+  ];
+
+  document.getElementById("highlight-cards").innerHTML = highlights.map(h => `
+    <div class="rounded-2xl border border-hairline bg-elevated p-5">
+      <div class="h-9 w-9 rounded-lg bg-${h.accent}/15 text-${h.accent} flex items-center justify-center mb-3">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${h.icon}</svg>
+      </div>
+      <p class="font-display text-base mb-1">${h.title}</p>
+      <p class="text-xs text-ink2 leading-relaxed">${h.desc}</p>
+    </div>
+  `).join("");
 }
 
-Chart.defaults.font.family = "Inter, sans-serif";
+async function loadDashboard() {
+  try {
+    const [reportRes, analyticsRes] = await Promise.all([
+      fetch("/reports/summary"),
+      fetch("/analytics/summary"),
+    ]);
+    if (!reportRes.ok || !analyticsRes.ok) throw new Error("One or more requests failed");
+
+    const report = await reportRes.json();
+    const analytics = await analyticsRes.json();
+    const todayHours = analytics.daily_study_hours.values.at(-1) ?? 0;
+
+    renderStatCards(report);
+    renderHero(report, todayHours);
+  } catch (err) {
+    console.error("Failed to load dashboard data:", err);
+    document.getElementById("hero-subtext").textContent =
+      "Couldn't load your data right now — check that the backend is running.";
+  }
+}
 
 greet();
-renderStats();
-renderWeeklyHoursChart();
-renderFocusTrendChart();
+renderHighlights();
+loadDashboard();

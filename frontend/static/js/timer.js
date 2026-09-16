@@ -15,6 +15,7 @@ let lastFailedPayload = null; // kept around so "Retry save" can resend it
 const display = document.getElementById("timer-display");
 const sessionDurationEl = document.getElementById("session-duration");
 const status = document.getElementById("timer-status");
+const subjectSelect = document.getElementById("subject-select");
 const startBtn = document.getElementById("start-btn");
 const pauseBtn = document.getElementById("pause-btn");
 const resumeBtn = document.getElementById("resume-btn");
@@ -100,6 +101,7 @@ function start() {
   intervalId = setInterval(tick, 1000);
   status.textContent = "Session in progress";
   showButtons({ pause: true, stop: true });
+  subjectSelect.disabled = true; // locked for the whole session — including through pause/resume
   liveWaveform.classList.remove("hidden");
   livePill?.classList.remove("hidden");
   livePill?.classList.add("flex");
@@ -123,6 +125,7 @@ function resume() {
 async function stop() {
   clearInterval(intervalId);
   showButtons({ start: true });
+  subjectSelect.disabled = false;
   liveWaveform.classList.add("hidden");
   livePill?.classList.add("hidden");
   livePill?.classList.remove("flex");

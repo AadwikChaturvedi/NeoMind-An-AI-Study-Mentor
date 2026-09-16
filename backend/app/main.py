@@ -73,6 +73,17 @@ app.include_router(reports.router)
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(FRONTEND_DIR / "templates"))
 
+# --- Cache-busting for static files ---
+# Without this, browsers can keep serving an old cached copy of a .js or
+# .css file even after you've replaced it on disk — the exact "I replaced
+# the file and nothing changed" confusion. ASSET_VERSION changes every
+# time the server (re)starts, so every page's static file URLs change
+# too, which forces the browser to fetch a fresh copy instead of using
+# its cache. Used in templates as: /static/js/timer.js?v={{ asset_version }}
+import time
+ASSET_VERSION = str(int(time.time()))
+templates.env.globals["asset_version"] = ASSET_VERSION
+
 
 @app.get("/")
 def serve_dashboard(request: Request):

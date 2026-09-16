@@ -14,7 +14,7 @@
 
     <div class="w-full max-w-sm mb-6">
       <label class="text-xs text-ink2 block mb-2 text-left" for="subject-select">Subject</label>
-      <select id="subject-select" class="w-full rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm">
+      <select id="subject-select" class="w-full rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
         <option>Organic Chemistry</option>
         <option>Linear Algebra</option>
         <option>World History</option>
@@ -64,5 +64,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/timer.js"></script>
+<script src="/static/js/timer.js?v={{ asset_version }}"></script>
 {% endblock %}
