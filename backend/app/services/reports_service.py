@@ -10,7 +10,7 @@ compute_productivity_score from analytics_service.py so that formula
 lives in exactly one place across the whole app.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
 from fpdf import FPDF
@@ -18,6 +18,14 @@ from fpdf.enums import XPos, YPos
 
 from app.models.study_session import StudySession
 from app.services.analytics_service import compute_productivity_score
+
+
+def _utcnow_naive() -> datetime:
+    """Current UTC time as a naive datetime (no tzinfo). Replaces the
+    deprecated datetime.utcnow() — SQLite/SQLAlchemy returns naive
+    datetimes for created_at, so this keeps both sides of any comparison
+    naive rather than mixing naive and aware (which raises a TypeError)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def compute_current_streak(sessions: List[StudySession]) -> int:
@@ -53,7 +61,7 @@ def compute_report_summary(sessions: List[StudySession]) -> dict:
     total_minutes = sum(s.duration for s in sessions)
     avg_focus = sum(s.focus_score for s in sessions) / len(sessions)
 
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = _utcnow_naive() - timedelta(days=7)
     distractions_this_week = sum(
         s.distractions for s in sessions if s.created_at and s.created_at >= week_ago
     )
@@ -87,7 +95,7 @@ def generate_report_pdf(summary: dict) -> bytes:
     pdf.set_text_color(120, 120, 130)
     pdf.cell(
         0, 8,
-        f"Generated {datetime.utcnow().strftime('%B %d, %Y')}",
+        f"Generated {_utcnow_naive().strftime('%B %d, %Y')}",
         new_x=XPos.LMARGIN, new_y=YPos.NEXT,
     )
     pdf.ln(8)

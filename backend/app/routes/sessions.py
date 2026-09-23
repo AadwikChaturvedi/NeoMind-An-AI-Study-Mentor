@@ -4,8 +4,6 @@ routes/sessions.py
 CRUD-style endpoints for study sessions:
   POST /sessions  - save a new session
   GET  /sessions  - list all sessions
-
-Reads/writes the same study_sessions table as routes/timer.py.
 """
 
 from typing import List
@@ -37,7 +35,7 @@ def create_session(payload: SessionCreate, db: Session = Depends(get_db)):
 def list_sessions(db: Session = Depends(get_db)):
     sessions = db.query(StudySession).order_by(StudySession.created_at.desc()).all()
     # Rounded here, not in the database: duration/focus_score are stored as
-    # floats (routes/timer.py can save fractional minutes), but this
+    # floats (the underlying StudySession model uses Float columns), but this
     # endpoint's contract promises whole numbers.
     return [
         SessionOut(

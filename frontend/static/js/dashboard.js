@@ -18,13 +18,7 @@ function renderStatCards(report) {
     { label: "Study sessions", value: report.sessions_logged, sub: "All-time", accent: "amber" },
     { label: "Productivity index", value: report.average_productivity_score, sub: "Out of 100", accent: "coral" },
   ];
-  document.getElementById("stat-cards").innerHTML = cards.map(c => `
-    <div class="rounded-2xl border border-hairline bg-surface p-5">
-      <p class="text-xs text-ink2 mb-2">${c.label}</p>
-      <p class="font-mono text-2xl">${c.value}</p>
-      <p class="text-xs text-${c.accent} mt-2">${c.sub}</p>
-    </div>
-  `).join("");
+  renderStatCardGrid("stat-cards", cards);
 }
 
 function renderHero(report, todayHours) {
@@ -102,7 +96,8 @@ async function loadDashboard() {
   } catch (err) {
     console.error("Failed to load dashboard data:", err);
     document.getElementById("hero-subtext").textContent =
-      "Couldn't load your data right now — check that the backend is running.";
+      "Your progress will appear here once the backend is reachable.";
+    showErrorBanner("Couldn't load your dashboard data. Check that the backend is running and try refreshing.");
   }
 }
 

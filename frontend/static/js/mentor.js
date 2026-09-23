@@ -23,6 +23,8 @@ const chatInput = document.getElementById("chat-input");
 const sendBtn = document.getElementById("send-btn");
 const promptsEl = document.getElementById("suggested-prompts");
 
+let awaitingReply = false; // guards against overlapping sends — see replyTo()/send()
+
 function scrollToBottom() {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
@@ -100,8 +102,6 @@ async function replyTo(userText) {
       body: JSON.stringify({ message: userText }),
     });
 
-    removeTypingIndicator();
-
     if (!res.ok) {
       const errorBody = await res.json().catch(() => ({}));
       addMessage("mentor", errorBody.detail || "The mentor couldn't respond right now. Try again in a moment.");
@@ -111,15 +111,28 @@ async function replyTo(userText) {
     const data = await res.json();
     addMessage("mentor", data.reply);
   } catch (err) {
-    removeTypingIndicator();
     console.error("Failed to reach the mentor:", err);
     addMessage("mentor", "Couldn't reach the mentor right now. Check your connection and try again.");
+  } finally {
+    // Single cleanup point for both the success and failure paths, so
+    // there's exactly one place responsible for removing the typing
+    // indicator and re-enabling input — not duplicated per branch.
+    removeTypingIndicator();
+    awaitingReply = false;
+    sendBtn.disabled = false;
+    chatInput.disabled = false;
   }
 }
 
 function send(text) {
+  if (awaitingReply) return; // ignore sends while a reply is already in flight
   const value = (text ?? chatInput.value).trim();
   if (!value) return;
+
+  awaitingReply = true;
+  sendBtn.disabled = true;
+  chatInput.disabled = true;
+
   addMessage("user", value);
   chatInput.value = "";
   replyTo(value);

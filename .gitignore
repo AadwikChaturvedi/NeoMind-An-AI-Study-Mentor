@@ -186,5 +186,5 @@ __pycache__/
 *.pyc
 venv/
 .venv/
-backend/neomind.db
+neomind.db
 .DS_Store

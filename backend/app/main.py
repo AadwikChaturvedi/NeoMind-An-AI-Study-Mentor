@@ -27,11 +27,10 @@ FRONTEND_DIR = PROJECT_ROOT / "frontend"
 load_dotenv(PROJECT_ROOT / ".env")
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.routes import health, timer, sessions, mentor, analytics, reports
+from app.routes import health, sessions, mentor, analytics, reports
 from app.database import init_db
 
 
@@ -43,24 +42,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="NeoMind AI", lifespan=lifespan)
 
-# --- CORS ---
-# Allows the frontend (running on a different origin/port during dev)
-# to call this API. Tighten allow_origins before deploying to production.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # --- Routers ---
 # Each feature gets its own router (modular structure).
 # Add new ones the same way as you build them out:
 #   from app.routes import dashboard
 #   app.include_router(dashboard.router)
 app.include_router(health.router)
-app.include_router(timer.router)
 app.include_router(sessions.router)
 app.include_router(mentor.router)
 app.include_router(analytics.router)

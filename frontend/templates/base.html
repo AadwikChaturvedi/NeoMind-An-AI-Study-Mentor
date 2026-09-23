@@ -152,6 +152,7 @@
     sidebarToggle?.addEventListener('click', () => sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar());
     overlay?.addEventListener('click', closeSidebar);
   </script>
+  <script src="/static/js/utils.js?v={{ asset_version }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 

@@ -25,12 +25,7 @@ function renderStatCards(stats) {
     { label: "Avg. distractions / session", value: stats.average_per_session, accent: "amber" },
     { label: "Distraction-free sessions", value: stats.distraction_free_sessions, accent: "cyan" },
   ];
-  document.getElementById("distraction-stats").innerHTML = cards.map(c => `
-    <div class="rounded-2xl border border-hairline bg-surface p-5">
-      <p class="text-xs text-ink2 mb-2">${c.label}</p>
-      <p class="font-mono text-2xl text-${c.accent}">${c.value}</p>
-    </div>
-  `).join("");
+  renderStatCardGrid("distraction-stats", cards);
 }
 
 function renderBarChart(canvasId, series, { color }) {
@@ -90,12 +85,7 @@ async function loadAnalytics() {
     }
   } catch (err) {
     console.error("Failed to load analytics:", err);
-    document.querySelector("main").insertAdjacentHTML(
-      "afterbegin",
-      `<div class="rounded-2xl border border-coral/40 bg-coral/10 text-coral text-sm px-4 py-3 mb-6">
-        Couldn't load analytics data. Check that the backend is running and try refreshing.
-      </div>`
-    );
+    showErrorBanner("Couldn't load analytics data. Check that the backend is running and try refreshing.");
   }
 }
 

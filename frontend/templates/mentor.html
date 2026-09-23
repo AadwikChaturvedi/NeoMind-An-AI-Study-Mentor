@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="grid lg:grid-cols-3 gap-6 h-[calc(100vh-11rem)]">
+<div class="grid lg:grid-cols-3 gap-6 h-auto lg:h-[calc(100vh-11rem)]">
   <div class="lg:col-span-2 rounded-3xl border border-hairline bg-surface flex flex-col overflow-hidden">
     <div class="px-6 py-4 border-b border-hairline flex items-center gap-3">
       <div class="h-9 w-9 rounded-full bg-gradient-to-br from-violet to-cyan flex items-center justify-center">
@@ -28,9 +28,10 @@
 
     <div class="border-t border-hairline p-4 flex gap-2">
       <input id="chat-input" type="text" placeholder="Ask about focus, motivation, or study strategy…"
-        class="flex-1 rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm" autocomplete="off" />
+        class="flex-1 rounded-xl bg-elevated border border-hairline px-4 py-3 text-sm disabled:opacity-50"
+        autocomplete="off" />
       <button id="send-btn"
-        class="rounded-xl bg-gradient-to-r from-violet to-cyan px-5 py-3 text-sm font-semibold text-ink hover:opacity-90 transition">Send</button>
+        class="rounded-xl bg-gradient-to-r from-violet to-cyan px-5 py-3 text-sm font-semibold text-ink hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
     </div>
   </div>
 
