@@ -188,3 +188,4 @@ venv/
 .venv/
 backend/neomind.db
 .DS_Store
+Emotion_Detector/Data
