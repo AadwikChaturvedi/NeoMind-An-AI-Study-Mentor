@@ -8,5 +8,5 @@ python-multipart
 google-genai
 fpdf2==2.8.8
 torch
-opencv-python
+opencv-python<5
 torchvision
