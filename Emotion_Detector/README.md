@@ -10,18 +10,26 @@ wired into NeoMind's FastAPI backend** — that's a later phase.
 |---|---|
 | `model.py` | CNN architecture, shared preprocessing, checkpoint save/load. No training, no dataset access, no webcam. Safe to import from anywhere, including later from NeoMind's backend. |
 | `face_detector.py` | OpenCV Haar-cascade face detection and cropping. Only depends on OpenCV — no torch, no model. Safe to import and test on its own. |
+| `focus_monitor.py` | Turns a stream of face-detected/not observations into a focus state, score, and distraction count. Only depends on the standard library `time` module — no cv2, no torch, no model. Safe to import and test on its own. |
 | `train.py` | Trains the model and saves the best checkpoint to `models/trained_model.pth`. Only runs when executed directly (`python train.py`) — never on import, and never automatically when NeoMind starts. |
-| `monitor.py` | Loads the saved checkpoint, detects a face in each webcam frame, and classifies **the face crop** (never the whole frame). Never trains, never imports `train.py`. Exits with a clear message (no stack trace) if no trained model exists yet. |
+| `monitor.py` | Loads the saved checkpoint, detects a face in each webcam frame, classifies **the face crop** (never the whole frame), and feeds the face-detected signal into a `FocusMonitor`. Never trains, never imports `train.py`. Exits with a clear message (no stack trace) if no trained model exists yet. |
 | `models/` | Where `trained_model.pth` lands after training. Empty right now — the original checkpoint was never committed and no longer exists, so this needs to be retrained. |
 
 ## Setup
 
 ```
-pip install torch torchvision opencv-python pillow
+pip install torch torchvision "opencv-python<5" pillow
 ```
 
 These aren't in the main `requirements.txt` yet — deliberately, since
 this phase isn't integrated with the FastAPI backend.
+
+**Pin OpenCV below version 5.** OpenCV 5.0 moved `CascadeClassifier`
+out of the base package and into opencv_contrib — a plain
+`pip install opencv-python` grabs 5.0 and `face_detector.py` fails
+with `AttributeError: module 'cv2' has no attribute 'CascadeClassifier'`.
+If you already hit this: `pip uninstall opencv-python -y` then
+reinstall with the pin above.
 
 ## 1. Get the dataset in place
 
@@ -119,6 +127,60 @@ Haar cascades get less reliable the smaller a face gets — if faces at
 your actual "different distances" test aren't being picked up, lower
 this rather than assuming something's broken.
 
+## 4. Focus monitoring
+
+`monitor.py` now feeds the face-detected signal into a `FocusMonitor`
+(from `focus_monitor.py`) every frame, and shows its output as a status
+panel bottom-left of the window:
+
+```
+Focus: FOCUSED  Score: 92.4
+Distractions: 1  (4.2s)
+Monitored: 38.6s
+```
+
+```
+python monitor.py --distraction-threshold 5   # more tolerant of brief look-aways
+```
+
+**What this is, and what it deliberately is NOT.** This is a
+prototype heuristic based on exactly one signal — whether a face is
+visible. It does not measure attention or concentration, and nothing
+here infers a psychological state from the emotion prediction; emotion
+is carried through purely as supplementary information; it never
+affects `focus_state`, `focus_score`, or `distraction_count`.
+
+**States:**
+
+- `focused` — a face is visible right now.
+- `no_face` — no face right now, but for less than
+  `--distraction-threshold` seconds (default 3s). A quick glance away,
+  not (yet) counted as a distraction.
+- `distracted` — no face for `--distraction-threshold` seconds or
+  more. `distraction_count` goes up exactly once per continuous
+  absence — not once per frame while it continues — and the time is
+  added to `total_distraction_time`.
+
+**`focus_score`** is a plain, transparent formula, not a model:
+
+```
+focus_score = 100 * (1 - total_distraction_time / total_monitored_time)
+```
+
+A short look-away that never crosses the threshold doesn't touch this
+score at all — the "no_face" grace period contributes nothing to
+`total_distraction_time`. `total_distraction_time` itself is *live*: it
+already includes the current in-progress distraction, and grows from
+the exact moment the threshold was crossed (not from whenever the next
+frame happens to notice), so it doesn't sit frozen mid-distraction and
+jump on recovery.
+
+`focus_monitor.py` has no cv2/torch dependency at all — it's a plain
+Python class driven by `update(face_detected, emotion=None, now=...)`,
+so it's reusable wherever NeoMind ends up wiring this in (the FastAPI
+backend, a different capture loop, tests) without dragging in OpenCV or
+torch just to track state.
+
 ## What's deliberately out of scope here
 
 - No FastAPI route, no NeoMind integration.
@@ -131,9 +193,77 @@ this rather than assuming something's broken.
   tilted a lot, or looking down won't register. That's an inherent
   limit of this cascade, not a bug; worth knowing given NeoMind's
   eventual use case (a student not facing the screen is itself a
-  meaningful signal, once this is wired into focus tracking).
+  meaningful signal — see the focus monitor above, which now does
+  exactly that.
+- No FastAPI integration for the focus monitor either — same as the
+  emotion pipeline, this phase is standalone.
+- `focus_score` is a simple ratio, not anything scientific. It doesn't
+  account for how *recent* distractions were, doesn't weight short vs.
+  long absences differently, and treats "no data yet" as a perfect
+  100 — all deliberate simplicity, worth knowing before this number
+  gets shown to a student as if it meant more than it does.
 
-## Testing status — face detection (this phase)
+## Testing status — focus monitoring (this phase)
+
+Unlike face detection, `focus_monitor.py` has zero dependency on cv2,
+torch, or a camera — it's a plain Python class driven by timestamps —
+so this phase got a real, deterministic automated test suite (a
+virtual clock, not `time.sleep`), 45 assertions covering:
+
+- constant presence (stays `focused`, nothing ever counted)
+- a brief absence under the threshold (`no_face`, not counted, score
+  untouched) and recovery without ever counting
+- an absence crossing the threshold (`distracted`, `distraction_count`
+  incremented exactly once — confirmed it does **not** re-increment on
+  every subsequent frame while still absent)
+- recovery after a counted distraction (`total_distraction_time`
+  settles and stops growing)
+- three separate prolonged absences → count == 3, not more
+- ten short blips that never cross the threshold → count stays 0
+- the `focus_score` formula checked against its own definition by hand
+- the very first call (zero elapsed time) → `focus_score` defaults to
+  100 with no division-by-zero
+- the exact boundary — `absence_duration == threshold` — counts as
+  distracted; one instant under does not
+- an invalid (zero/negative) threshold is rejected
+- `emotion` is passed through unchanged and confirmed to have zero
+  effect on `focus_state`/`focus_score`/`distraction_count`
+- `snapshot()` contains exactly the required keys, plus
+  `total_monitored_time`
+- `reset()` zeroes every counter while keeping the configured threshold
+
+Two real (small) issues turned up while writing these tests and were
+fixed, not just documented: total_distraction_time now reflects the
+exact moment a distraction started (backdated to when the threshold
+was actually crossed, since that moment is knowable exactly) rather
+than the frame that happened to detect it — otherwise it would read 0
+on the exact frame a distraction is first flagged and only start
+growing on the next one.
+
+Also ran the real, non-synthetic pipeline this phase enables: real
+`face_detector.detect_faces()` output (not a hand-written boolean) fed
+into a real `FocusMonitor` across a focused → absent → distracted →
+recovered sequence, confirming the two files work together exactly as
+`monitor.py`'s loop uses them — the state transitions landed on the
+correct frame given the configured threshold.
+
+**Not run in this environment:** the live webcam version — same
+limitation as every phase so far (no camera, no room for
+torch/torchvision here). The status panel's layout (bottom-left,
+clear of the top-left "no face" notice and the per-face label) was
+checked with synthetic frames, but seeing it update live, and reading
+the numbers as you deliberately look away for different lengths of
+time, is worth doing on your machine:
+
+```
+python monitor.py
+```
+
+Try a deliberately short glance away (should show `no_face`, count
+stays put) and a longer one past your threshold (should flip to
+`distracted`, red panel text, count goes up by exactly 1).
+
+## Testing status — face detection (Phase 3)
 
 Verified in this environment, with real synthetic-image tests (not
 just a read-through) against `face_detector.py` directly:
